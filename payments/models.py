@@ -10,6 +10,21 @@ class Wallet(models.Model):
   def __str__(self):
     return self.user.username
 
+class Transaction(models.Model):
+  TRANSACTION_CHOICES = (
+    ('deposit', 'Deposit'),
+    ('withdraw', 'Withdraw'),
+    ('refund', 'Refund'),
+  )
+  wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name = 'transactions')
+  amount = models.DecimalField(max_digits=12, decimal_places=2)
+  transaction = models.CharField(max_length=50, choices=TRANSACTION_CHOICES, default = 'deposit')
+  date = models.DateTimeField(auto_now_add=True)
+  description = models.TextField(blank=True, null=True)
+
+  def __str__(self):
+    return self.wallet.user.username
+
 class Escrow(models.Model):
   milestone = models.OneToOneField('milestones.Milestone', on_delete=models.CASCADE, related_name = 'escrow')
   client = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name = 'escrows_funded')
@@ -31,3 +46,23 @@ class Payment(models.Model):
 
   def __str__(self):
     return str(self.amount)
+
+class Refund(models.Model):
+  payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name = 'refunds')
+  amount = models.DecimalField(max_digits=12, decimal_places=2)
+  reason = models.TextField()
+  refunded_at = models.DateTimeField(auto_now_add=True)
+
+class PaymentMethod(models.Model):
+  METHOD_CHOICES = (
+    ('card', 'Card'),
+    ('stripe', 'Stripe'),
+    ('paypal', 'Paypal'),
+  )
+  user = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'pay_methods')
+  method_type = models.CharField(max_length=50, choices=METHOD_CHOICES, default = 'card') 
+  is_default = models.BooleanField(default=False)
+
+  def __str__(self):
+    return self.user.username
+
