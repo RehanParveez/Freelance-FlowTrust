@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from payments.models import Payment
+from django.db import transaction
 
 # Create your views here.
 class MilestoneViewset(viewsets.ModelViewSet):
@@ -31,22 +32,26 @@ class MilestoneViewset(viewsets.ModelViewSet):
     return Response({'status': 'milest is sub'}, status=200)
   
   @action(detail=True, methods=['post'])
+  @transaction.atomic
   def approve_milest(self, request, pk=None):
     milest = self.get_object()
+    
     if milest.status != 'submitted':
       return Response({'err': 'sub milest to be approv'}, status=400)
-    milest.status = 'approved'
-    milest.save()
     escrow = milest.escrow
     if not escrow.is_funded:
       return Response({'err': 'escrow isnt funded so pay wont be relea'})
+    if Payment.objects.filter(escrow=escrow).exists():
+      return Response({'err': 'pay exists'}, status=400)
+    milest.status = 'approved'
+    milest.save()
+
     escrow.is_released = True
     escrow.save()
-    
     Payment.objects.create(escrow=escrow, client=escrow.client, freelancer=escrow.freelancer, amount=escrow.amount)
     return Response({'status': 'milest is appro & pay is relea'}, status=200)
    
-  @action(detail=True, methods='post')
+  @action(detail=True, methods=['post'])
   def reject_miles(self, request, pk=None):
     milest = self.get_object()
     if milest.status != 'submitted':

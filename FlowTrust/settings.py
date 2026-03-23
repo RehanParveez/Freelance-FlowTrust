@@ -130,3 +130,10 @@ AUTH_USER_MODEL = 'accounts.User'
 
 LOGIN_REDIRECT_URL = '/milestones/milestone/'
 LOGOUT_REDIRECT_URL = '/accounts/user/'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
