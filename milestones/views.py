@@ -25,6 +25,8 @@ class MilestoneViewset(viewsets.ModelViewSet):
   @action(detail=True, methods=['post'])
   def sub_milest(self, request, pk=None):
     milest = self.get_object()
+    if request.user != milest.contract.freelancer:
+      return Response({'err': 'freel can submit'}, status=403)
     if milest.status != 'pending':
       return Response({'err': 'milest cant be sub'}, status=400)
     milest.status = 'submitted'
@@ -35,6 +37,8 @@ class MilestoneViewset(viewsets.ModelViewSet):
   @transaction.atomic
   def approve_milest(self, request, pk=None):
     milest = self.get_object()
+    if request.user != milest.contract.client:
+      return Response({'err': 'client can approve'}, status=403)
     
     if milest.status != 'submitted':
       return Response({'err': 'sub milest to be approv'}, status=400)
@@ -54,6 +58,8 @@ class MilestoneViewset(viewsets.ModelViewSet):
   @action(detail=True, methods=['post'])
   def reject_miles(self, request, pk=None):
     milest = self.get_object()
+    if request.user != milest.contract.client:
+      return Response({'err': 'client can reject'}, status=403)
     if milest.status != 'submitted':
       return Response({'err': 'submitt milest can be rej'}, status=400)
     milest.status = 'rejected'

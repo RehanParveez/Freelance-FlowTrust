@@ -24,6 +24,8 @@ class ContractViewset(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def add_milest(self, request, pk=None):
       contr = self.get_object()
+      if request.user != contr.client:
+        return Response({'err': 'client can add milest'}, status=403)
       serializer = MilestoneSerializer(data=request.data)
       if serializer.is_valid():
         serializer.save(contract=contr)

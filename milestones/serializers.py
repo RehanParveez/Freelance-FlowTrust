@@ -5,3 +5,4 @@ class MilestoneSerializer(serializers.ModelSerializer):
   class Meta:
     model = Milestone
     fields = ['contract', 'title', 'amount', 'status', 'is_submitted', 'is_approved']
+    read_only_fields = ['contract']
