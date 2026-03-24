@@ -7,4 +7,4 @@ from accounts.models import User
 class UserViewset(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all().order_by('id')
-    
+  

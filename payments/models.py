@@ -48,7 +48,7 @@ class Payment(models.Model):
     return str(self.amount)
 
 class Refund(models.Model):
-  payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name = 'refunds')
+  payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name = 'refunds', blank=True, null=True)
   amount = models.DecimalField(max_digits=12, decimal_places=2)
   reason = models.TextField()
   refunded_at = models.DateTimeField(auto_now_add=True)
