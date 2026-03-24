@@ -49,21 +49,18 @@ class PaymentViewset(viewsets.ModelViewSet):
   @action(detail=True, methods=['post'])
   @transaction.atomic
   def refund(self, request, pk=None):
-    milest = Milestone.objects.get(id=pk)
+    payment = Payment.objects.get(id=pk)
+    escrow = payment.escrow
+    milest = escrow.milestone
     if request.user != milest.contract.client:
       return Response({'err': 'client can refund'}, status=403)
-    
-    escrow = Escrow.objects.filter(milestone=milest)
-    escrow = escrow.first()
-    if not escrow:
-      return Response({'err': 'no escrow found'}, status=400)
     if escrow.is_released:
       return Response({'err': 'is already released'}, status=400)
     wallet = escrow.client.wallet
     wallet.balance += escrow.amount
     wallet.save()
     
-    Refund.objects.create(payment=None, amount=escrow.amount, reason = 'refunding before the approval')
-    Transaction.objects.create(wallet=wallet, amount=escrow.amount, transaction = 'refunding', description = 'refunding from the escrow')
+    Refund.objects.create(payment=payment, amount=escrow.amount, reason = 'refunding before the approval')
+    Transaction.objects.create(wallet=wallet, amount=escrow.amount, transaction = 'refund', description = 'refunding from the escrow')
     escrow.delete()
     return Response({'status': 'the refund is done'}, status=200)

@@ -52,6 +52,9 @@ class Refund(models.Model):
   amount = models.DecimalField(max_digits=12, decimal_places=2)
   reason = models.TextField()
   refunded_at = models.DateTimeField(auto_now_add=True)
+  
+  def __str__(self):
+    return self.refunded_at
 
 class PaymentMethod(models.Model):
   METHOD_CHOICES = (
