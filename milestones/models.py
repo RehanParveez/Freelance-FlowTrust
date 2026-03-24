@@ -49,4 +49,3 @@ class MilestoneStatus(models.Model):
   def __str__(self):
     return self.milestone.title
   
-  

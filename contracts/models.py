@@ -49,5 +49,3 @@ class ContractStatus(models.Model):
   def __str__(self):
     return self.contract.title
   
-  
-

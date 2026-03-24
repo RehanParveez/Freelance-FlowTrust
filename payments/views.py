@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from payments.serializers import PaymentSerializer
+from payments.serializers.detail import PaymentSerializer
 from payments.models import Payment, Escrow, Transaction, Refund
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action

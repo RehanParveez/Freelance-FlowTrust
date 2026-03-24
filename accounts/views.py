@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from accounts.serializers import UserSerializer
+from accounts.serializers.detail import UserSerializer
 from accounts.models import User
 
 # Create your views here.

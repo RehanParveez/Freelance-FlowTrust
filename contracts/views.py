@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from contracts.serializers import ContractSerializer
+from contracts.serializers.detail import ContractSerializer
 from contracts.models import Contract
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-from milestones.serializers import MilestoneSerializer
+from milestones.serializers.detail import MilestoneSerializer
 from rest_framework.response import Response
 
 # Create your views here.
