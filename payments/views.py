@@ -1,20 +1,37 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from payments.serializers.detail import PaymentSerializer
-from payments.models import Payment, Escrow, Transaction, Refund
+from payments.serializers.detail import WalletSerializer, PaymentSerializer, PaymentMethodSerializer
+from payments.models import Wallet, Payment, Escrow, Transaction, Refund, PaymentMethod
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from django.db import transaction
 from milestones.models import Milestone
 from rest_framework.response import Response
 from decimal import Decimal
+from core.permissions import OwnerPermission, PaymentPermission
 
 # Create your views here.
+class WalletViewset(viewsets.ModelViewSet):
+  serializer_class = WalletSerializer
+  queryset = Wallet.objects.all().order_by('id')
+  permission_classes = [IsAuthenticated, OwnerPermission]
+    
+  def get_queryset(self):
+    return self.queryset.filter(user=self.request.user)
+    
 class PaymentViewset(viewsets.ModelViewSet):
   serializer_class = PaymentSerializer
   queryset = Payment.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated]
+  permission_classes = [IsAuthenticated, PaymentPermission]
   
+  def get_queryset(self):
+    user = self.request.user
+    if user.control == 'admin':
+      return self.queryset
+    client_pay = self.queryset.filter(client=user)
+    freelan_pay = self.queryset.filter(freelancer=user)
+    return client_pay | freelan_pay
+    
   @action(detail=True, methods=['post'])
   @transaction.atomic()
   def deposit(self, request, pk=None):
@@ -64,3 +81,13 @@ class PaymentViewset(viewsets.ModelViewSet):
     Transaction.objects.create(wallet=wallet, amount=escrow.amount, transaction = 'refund', description = 'refunding from the escrow')
     escrow.delete()
     return Response({'status': 'the refund is done'}, status=200)
+  
+class PaymentMethodViewset(viewsets.ModelViewSet):
+  serializer_class = PaymentMethodSerializer
+  queryset = PaymentMethod.objects.all().order_by('id')
+  permission_classes = [IsAuthenticated, OwnerPermission]
+  
+  def get_queryset(self):
+    return self.queryset.filter(user=self.request.user)
+    
+    

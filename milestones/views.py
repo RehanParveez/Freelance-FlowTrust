@@ -1,26 +1,27 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from milestones.serializers.detail import MilestoneSerializer
-from milestones.models import Milestone
+from milestones.serializers.detail import MilestoneSerializer, MilestoneSubmissionSerializer, MilestoneReviewSerializer, MilestoneStatusSerializer
+from milestones.models import Milestone, MilestoneSubmission, MilestoneReview, MilestoneStatus
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from payments.models import Payment, Escrow, Transaction
 from django.db import transaction
+from core.permissions import MilestonePermission
 
 # Create your views here.
 class MilestoneViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneSerializer
   queryset = Milestone.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated]
+  permission_classes = [IsAuthenticated, MilestonePermission]
   
   def get_queryset(self):
     user = self.request.user
-    if user.is_superuser:
-      return Milestone.objects.all()
-    client_miles = Milestone.objects.filter(contract__client=user)
-    freelan_miles = Milestone.objects.filter(contract__freelancer=user)
-    return client_miles | freelan_miles
+    if user.control == 'admin':
+      return self.queryset
+    client_milest = self.queryset.filter(contract__client=user)
+    freelan_milest = self.queryset.filter(contract__freelancer=user)
+    return client_milest | freelan_milest
   
   @action(detail=True, methods=['post'])
   def sub_milest(self, request, pk=None):
@@ -75,5 +76,46 @@ class MilestoneViewset(viewsets.ModelViewSet):
     milest.status = 'rejected'
     milest.save()
     return Response({'status': 'miles is rej'}, status=200)
+  
+class MilestoneSubmissionViewset(viewsets.ModelViewSet):
+  serializer_class = MilestoneSubmissionSerializer
+  queryset = MilestoneSubmission.objects.all().order_by('id')
+  permission_classes = [IsAuthenticated, MilestonePermission]
+  
+  def get_queryset(self):
+    user = self.request.user
+    if user.control == 'admin':
+      return self.queryset
+    client_milestsub = self.queryset.filter(milestone__contract__client=user)
+    freelan_milestsub = self.queryset.filter(milestone__contract__freelancer=user)
+    return client_milestsub | freelan_milestsub
+    
+class MilestoneReviewViewset(viewsets.ModelViewSet):
+  serializer_class = MilestoneReviewSerializer
+  queryset = MilestoneReview.objects.all().order_by('id')
+  permission_classes = [IsAuthenticated, MilestonePermission]
+  
+  def get_queryset(self):
+    user = self.request.user
+    if user.control == 'admin':
+      return self.queryset
+    client_milestrev = self.queryset.filter(submission__milestone__contract__client=user)
+    freelan_milestrev = self.queryset.filter(submission__milestone__contract__freelancer=user)
+    return client_milestrev | freelan_milestrev
+  
+class MilestoneStatusViewset(viewsets.ModelViewSet):
+  serializer_class = MilestoneStatusSerializer
+  queryset = MilestoneStatus.objects.all().order_by('id')
+  permission_classes = [IsAuthenticated, MilestonePermission]
+  
+  def get_queryset(self):
+    user = self.request.user
+    if user.control == 'admin':
+      return self.queryset
+    client_mileststat = self.queryset.filter(milestone__contract__client=user)
+    freelan_mileststat = self.queryset.filter(milestone__contract__freelancer=user)
+    return client_mileststat | freelan_mileststat
+    
+    
 
 
