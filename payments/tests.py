@@ -2,6 +2,9 @@ from accounts.tests import ParentTest
 from contracts.models import Contract
 from milestones.models import Milestone
 from payments.models import Wallet, Escrow, Payment
+from django.test import TestCase
+from unittest.mock import patch
+from accounts.models import User
 
 class PaymentViewsetTest(ParentTest):
   def setUp(self):
@@ -62,4 +65,19 @@ class PaymentViewsetTest(ParentTest):
     url = f'/payments/payment/{payment.id}/refund/'
     resp = self.client.post(url)
     self.assertEqual(resp.status_code, 400)
+    
+class PaymentSignalTest(TestCase):
+  @patch('core.tasks.send_notification.delay')
+  def test_pay_relsignal(self, mock_send):
+    client = User.objects.create_user(username = 'client', email = 'client@gmail.com', control = 'client')
+    freelancer = User.objects.create_user(username = 'freelancer', email = 'freelancer@gmail.com', control = 'freelancer')
+    contract = Contract.objects.create(client=client, freelancer=freelancer, title = 'C1', status='active', total_amount=10000)
+    milestone = Milestone.objects.create(contract=contract, title = 'M1', amount=5000, status = 'approved')
+    escrow = Escrow.objects.create(milestone=milestone, client=client, freelancer=freelancer, amount=5000, is_funded=True)
+    payment = Payment.objects.create(escrow=escrow, client=client, freelancer=freelancer, amount=5000)
+        
+    mock_send.assert_called_once_with(
+      subject='the payment is released',
+      message=f'{payment.amount}',
+      recipient_email=freelancer.email)
     

@@ -5,6 +5,7 @@ from accounts.models import User
 class Contract(models.Model):
   STATUS_CHOICES = (
     ('draft', 'Draft'),
+    ('pending', 'Pending Acceptance'),
     ('active', 'Active'),
     ('completed', 'Completed'),
   )

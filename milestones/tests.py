@@ -2,6 +2,9 @@ from accounts.tests import ParentTest
 from contracts.models import Contract
 from milestones.models import Milestone
 from payments.models import Escrow, Payment, Wallet
+from django.test import TestCase
+from unittest.mock import patch
+from accounts.models import User
 
 # Create your tests here.
 class MilestoneViewsetTest(ParentTest):
@@ -65,6 +68,20 @@ class MilestoneViewsetTest(ParentTest):
     url = f'/milestones/milestone/{self.milest2.id}/reject_miles/'
     resp = self.client.post(url)
     self.assertEqual(resp.status_code, 403)
+    
+class MilestoneSignalTest(TestCase):
+  @patch('core.tasks.send_notification.delay')  
+  def test_milest_subsignal(self, mock_send):
+    client = User.objects.create_user(username = 'client', email = 'client@gmail.com', control = 'client')
+    freelancer = User.objects.create_user(username = 'freelancer', email = 'freelancer@gmail.com', control = 'freelancer')
+    contract = Contract.objects.create(client=client, freelancer=freelancer, title = 'C1', status = 'active', total_amount=10000)
+    milestone = Milestone.objects.create(contract=contract, title = 'M1', amount=5000, status = 'pending')
+    milestone.status = 'submitted'
+    milestone.save() 
+    mock_send.assert_called_once_with(
+    subject='milest is submitted',
+    message=f"'{milestone.title}' is submitted",
+    recipient_email=contract.client.email)
 
     
   

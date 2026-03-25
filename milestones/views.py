@@ -8,12 +8,20 @@ from rest_framework.response import Response
 from payments.models import Payment, Escrow, Transaction
 from django.db import transaction
 from core.permissions import MilestonePermission
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
 # Create your views here.
 class MilestoneViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneSerializer
   queryset = Milestone.objects.all().order_by('id')
   permission_classes = [IsAuthenticated, MilestonePermission]
+  filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    
+  # filtering fields
+  search_fields = ['title']
+  ordering_fields = ['is_submitted']
+  filterset_fields = ['title', 'order', 'status', 'is_submitted']
   
   def get_queryset(self):
     user = self.request.user
@@ -42,6 +50,10 @@ class MilestoneViewset(viewsets.ModelViewSet):
       return Response({'err': 'client can approve'}, status=403)
     if milest.status != 'submitted':
       return Response({'err': 'sub milest to be approv'}, status=400)
+    
+    prev = Milestone.objects.filter(contract=milest.contract, order__lt=milest.order)
+    if prev.exclude(status='approved').exists():
+        return Response({'err': 'prev milests should be comp first'}, status=400)
   
     escrow = Escrow.objects.filter(milestone=milest)
     escrow = escrow.first()
@@ -64,6 +76,11 @@ class MilestoneViewset(viewsets.ModelViewSet):
     Transaction.objects.create(wallet=freel_wallet, amount=escrow.amount, transaction = 'deposit', description = 'pay of milest release')
     milest.status = 'approved'
     milest.save()
+    all_milests = Milestone.objects.filter(contract=milest.contract)
+    if all(m.status == 'approved' for m in all_milests):
+        contract = milest.contract
+        contract.status = 'completed'
+        contract.save()
     return Response({'status': 'milest is appro & pay is relea'}, status=200)
 
   @action(detail=True, methods=['post'])
@@ -81,6 +98,12 @@ class MilestoneSubmissionViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneSubmissionSerializer
   queryset = MilestoneSubmission.objects.all().order_by('id')
   permission_classes = [IsAuthenticated, MilestonePermission]
+  filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    
+  # filtering fields
+  search_fields = ['notes']
+  ordering_fields = ['submitted_at']
+  filterset_fields = ['notes', 'submitted_at']
   
   def get_queryset(self):
     user = self.request.user
@@ -94,6 +117,12 @@ class MilestoneReviewViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneReviewSerializer
   queryset = MilestoneReview.objects.all().order_by('id')
   permission_classes = [IsAuthenticated, MilestonePermission]
+  filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    
+  # filtering fields
+  search_fields = ['email']
+  ordering_fields = ['reviewed_at']
+  filterset_fields = ['rating', 'reviewed_at']
   
   def get_queryset(self):
     user = self.request.user
@@ -107,6 +136,12 @@ class MilestoneStatusViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneStatusSerializer
   queryset = MilestoneStatus.objects.all().order_by('id')
   permission_classes = [IsAuthenticated, MilestonePermission]
+  filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    
+  # filtering fields
+  search_fields = ['prev_status']
+  ordering_fields = ['new_status']
+  filterset_fields = ['date', 'new_status']
   
   def get_queryset(self):
     user = self.request.user

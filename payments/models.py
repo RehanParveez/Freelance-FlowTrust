@@ -54,7 +54,7 @@ class Refund(models.Model):
   refunded_at = models.DateTimeField(auto_now_add=True)
   
   def __str__(self):
-    return self.refunded_at
+    return str(self.refunded_at)
 
 class PaymentMethod(models.Model):
   METHOD_CHOICES = (
