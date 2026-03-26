@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from contracts.serializers.detail import ContractSerializer, ContrParticipantSerializer, ContractTermSerializer, ContractStatusSerializer
-from contracts.models import Contract, ContrParticipant, ContractTerm, ContractStatus
+from contracts.serializers.detail import ContractSerializer, ContrParticipantSerializer, ContractTermSerializer, ContractStatusSerializer, ActivitySerializer
+from contracts.models import Contract, ContrParticipant, ContractTerm, ContractStatus, Activity
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from milestones.serializers.detail import MilestoneSerializer
@@ -109,7 +109,11 @@ class ContractStatusViewset(viewsets.ModelViewSet):
     client_contrstat = self.queryset.filter(contract__client=user)
     freelan_contrstat = self.queryset.filter(contract__freelancer=user)
     return client_contrstat | freelan_contrstat
-  
+
+class ActivityViewset(viewsets.ModelViewSet):
+    serializer_class = ActivitySerializer
+    queryset = Activity.objects.all().order_by('id')
+    permission_classes = []
 
 
     

@@ -3,7 +3,10 @@ from accounts.serializers.basic import UserSerializer1
 from milestones.serializers.basic import MilestoneSerializer1
 from contracts.serializers.basic import ContrParticipantSerializer1, ContractTermSerializer1
 from contracts.serializers.basic import ContractStatusSerializer1
-from contracts.models import Contract, ContrParticipant, ContractTerm, ContractStatus
+from contracts.models import Contract, ContrParticipant, ContractTerm, ContractStatus, Activity
+from disputes.serializers.basic import DisputeSerializer1
+from communication.serializers.basic import NegotiationSerializer1
+from reviews.serializers.basic import ReviewSerializer1
 
 class ContractSerializer(serializers.ModelSerializer):
   client = UserSerializer1(read_only=True)
@@ -12,9 +15,12 @@ class ContractSerializer(serializers.ModelSerializer):
   participants = ContrParticipantSerializer1(many=True, read_only=True)
   terms = ContractTermSerializer1(many=True, read_only=True)
   contr_statuses = ContractStatusSerializer1(many=True, read_only=True)
+  disputes = DisputeSerializer1(many=True, read_only=True)
+  negotiations = NegotiationSerializer1(many=True, read_only=True)
+  reviews = ReviewSerializer1(many=True, read_only=True)
   class Meta:
     model = Contract
-    fields = ['client', 'freelancer', 'milestones', 'participants', 'terms', 'contr_statuses', 'title', 'description', 'total_amount', 'status', 'created_at']
+    fields = ['client', 'freelancer', 'milestones', 'participants', 'terms', 'contr_statuses', 'disputes', 'negotiations', 'reviews', 'title', 'description', 'total_amount', 'status', 'created_at']
     
 class ContrParticipantSerializer(serializers.ModelSerializer):
   user = UserSerializer1(read_only=True)
@@ -32,3 +38,8 @@ class ContractStatusSerializer(serializers.ModelSerializer):
   class Meta:
     model = ContractStatus
     fields = ['contract', 'prev_status', 'new_status', 'changed_by', 'date']
+    
+class ActivitySerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Activity
+    fields = ['user', 'action_type', 'content_type', 'object_id', 'content_object', 'date']

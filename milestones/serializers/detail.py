@@ -4,6 +4,7 @@ from milestones.serializers.basic import MilestoneSubmissionSerializer1, Milesto
 from payments.serializers.basic import EscrowSerializer1, PaymentSerializer1
 from accounts.serializers.basic import UserSerializer1
 from milestones.models import Milestone, MilestoneSubmission, MilestoneReview, MilestoneStatus
+from disputes.serializers.basic import DisputeSerializer1
 
 class MilestoneSerializer(serializers.ModelSerializer):
   contract = ContractSerializer1(read_only=True)
@@ -11,9 +12,10 @@ class MilestoneSerializer(serializers.ModelSerializer):
   miless_statuses = MilestoneStatusSerializer1(many=True, read_only=True)
   escrow = EscrowSerializer1(read_only=True)
   payment = PaymentSerializer1(read_only=True)
+  disputes = DisputeSerializer1(many=True, read_only=True)
   class Meta:
     model = Milestone
-    fields = ['contract', 'submissions', 'miless_statuses', 'escrow', 'payment', 'title', 'amount', 'status', 'is_submitted', 'is_approved']
+    fields = ['contract', 'submissions', 'miless_statuses', 'disputes', 'escrow', 'payment', 'title', 'amount', 'status', 'is_submitted', 'is_approved']
     
 class MilestoneSubmissionSerializer(serializers.ModelSerializer):
   submitted_by = UserSerializer1(read_only=True)
