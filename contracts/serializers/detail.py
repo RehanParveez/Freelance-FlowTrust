@@ -7,10 +7,12 @@ from contracts.models import Contract, ContrParticipant, ContractTerm, ContractS
 from disputes.serializers.basic import DisputeSerializer1
 from communication.serializers.basic import NegotiationSerializer1
 from reviews.serializers.basic import ReviewSerializer1
+from accounts.models import User
 
 class ContractSerializer(serializers.ModelSerializer):
   client = UserSerializer1(read_only=True)
-  freelancer = UserSerializer1(read_only=True)
+  freelancer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)
+  freela_detail = UserSerializer1(source = 'freelancer', read_only=True)
   milestones = MilestoneSerializer1(many=True, read_only=True)
   participants = ContrParticipantSerializer1(many=True, read_only=True)
   terms = ContractTermSerializer1(many=True, read_only=True)
@@ -20,7 +22,7 @@ class ContractSerializer(serializers.ModelSerializer):
   reviews = ReviewSerializer1(many=True, read_only=True)
   class Meta:
     model = Contract
-    fields = ['client', 'freelancer', 'milestones', 'participants', 'terms', 'contr_statuses', 'disputes', 'negotiations', 'reviews', 'title', 'description', 'total_amount', 'status', 'created_at']
+    fields = ['client', 'freelancer', 'freela_detail', 'milestones', 'participants', 'terms', 'contr_statuses', 'disputes', 'negotiations', 'reviews', 'title', 'description', 'total_amount', 'status', 'created_at']
     
 class ContrParticipantSerializer(serializers.ModelSerializer):
   user = UserSerializer1(read_only=True)

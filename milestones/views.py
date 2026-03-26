@@ -76,11 +76,6 @@ class MilestoneViewset(viewsets.ModelViewSet):
     Transaction.objects.create(wallet=freel_wallet, amount=escrow.amount, transaction = 'deposit', description = 'pay of milest release')
     milest.status = 'approved'
     milest.save()
-    all_milests = Milestone.objects.filter(contract=milest.contract)
-    if all(m.status == 'approved' for m in all_milests):
-        contract = milest.contract
-        contract.status = 'completed'
-        contract.save()
     return Response({'status': 'milest is appro & pay is relea'}, status=200)
 
   @action(detail=True, methods=['post'])

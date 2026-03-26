@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 class Contract(models.Model):
   STATUS_CHOICES = (
     ('draft', 'Draft'),
-    ('pending', 'Pending Acceptance'),
+    ('pending', 'Pending'),
     ('active', 'Active'),
     ('completed', 'Completed'),
   )
@@ -16,7 +16,7 @@ class Contract(models.Model):
   title = models.CharField(max_length=50)
   description = models.TextField(blank=True) 
   total_amount = models.DecimalField(max_digits=12, decimal_places=2)
-  status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+  status = models.CharField(max_length=20, choices=STATUS_CHOICES, default = 'pending')
   created_at = models.DateTimeField(auto_now_add=True)
 
   def __str__(self):

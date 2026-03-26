@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from milestones.serializers.detail import MilestoneSerializer
 from rest_framework.response import Response
-from core.permissions import ContractPermission
+from core.permissions import ContractPermission, ActivityPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -30,6 +30,9 @@ class ContractViewset(viewsets.ModelViewSet):
       freelan_contr = self.queryset.filter(freelancer=user)
       return client_contr | freelan_contr
     
+    def perform_create(self, serializer):
+        serializer.save(client=self.request.user)
+    
     @action(detail=True, methods=['post'])
     def add_milest(self, request, pk=None):
       contr = self.get_object()
@@ -52,6 +55,21 @@ class ContractViewset(viewsets.ModelViewSet):
       contr.status = 'active'
       contr.save()
       return Response({'status': 'contract is activated'}, status=200)
+   
+    @action(detail=True, methods=['post'])
+    def complete_contr(self, request, pk=None):
+      contr = self.get_object()
+      if request.user != contr.client:
+        return Response({'err': 'the contract can be comp by the client'}, status=403)
+      if contr.status != 'active':
+        return Response({'err': 'the contract is not active'}, status=400)
+      
+      for milest in contr.milestones.all():
+        if not milest.is_approved:
+          return Response({'error': 'All milestones must be approved'}, status=400)
+      contr.status = 'completed'
+      contr.save()
+      return Response({'status': 'the contract is completed'}, status=200)
 
 class ContrParticipantViewset(viewsets.ModelViewSet):
   serializer_class = ContrParticipantSerializer
@@ -113,7 +131,15 @@ class ContractStatusViewset(viewsets.ModelViewSet):
 class ActivityViewset(viewsets.ModelViewSet):
     serializer_class = ActivitySerializer
     queryset = Activity.objects.all().order_by('id')
-    permission_classes = []
+    permission_classes = [ActivityPermission]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    
+  # filtering fields
+    search_fields = ['action_type']
+    ordering_fields = ['action_type']
+    filterset_fields = ['object_id', 'date']
+    
+    
 
 
     

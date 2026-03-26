@@ -1,5 +1,6 @@
 from accounts.tests import ParentTest
 from contracts.models import Contract
+from milestones.models import Milestone
 
 # Create your tests here.
 class ContractViewsetTest(ParentTest):
@@ -46,5 +47,35 @@ class ContractViewsetTest(ParentTest):
     self.contr.save()
     self.auth_user(self.client1)
     url = f'/contracts/contract/{self.contr.id}/accept_contr/'
+    resp = self.client.post(url)
+    self.assertEqual(resp.status_code, 403)
+  
+  def test_complete_contr1(self):
+    self.contr.status = 'active'
+    self.contr.save()
+    Milestone.objects.create(contract=self.contr, title = 'milest 1', amount=3000, is_approved=True)
+    Milestone.objects.create(contract=self.contr, title ='milest 2', amount=6000, is_approved=True)
+
+    self.auth_user(self.client1)
+    url = f'/contracts/contract/{self.contr.id}/complete_contr/'
+    resp = self.client.post(url)
+    self.assertEqual(resp.status_code, 200)
+    self.contr.refresh_from_db()
+    self.assertEqual(self.contr.status, 'completed')
+    
+  def test_complete_contr2(self):
+    self.contr.status = 'active'
+    self.contr.save()
+    Milestone.objects.create(contract=self.contr, title = 'milest 3', amount=3000, is_approved=True)
+    Milestone.objects.create(contract=self.contr, title = 'milest 4', amount=6000, is_approved=False)
+
+    self.auth_user(self.client1)
+    url = f'/contracts/contract/{self.contr.id}/complete_contr/'
+    resp = self.client.post(url)
+    self.assertEqual(resp.status_code, 400)
+    self.contr.refresh_from_db()
+    self.assertNotEqual(self.contr.status, 'completed')
+
+    self.auth_user(self.freelancer1)
     resp = self.client.post(url)
     self.assertEqual(resp.status_code, 403)
