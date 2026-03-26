@@ -9,5 +9,4 @@ def milest_submitted(sender, instance, created, **kwargs):
     send_notification.delay(
       subject='milest is submitted',
       message=f"'{instance.title}' is submitted",
-      recipient_email=instance.contract.client.email
-    )
+      recipient_email=instance.contract.client.email)

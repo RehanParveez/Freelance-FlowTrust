@@ -1,17 +1,20 @@
 from accounts.tests import ParentTest
 from contracts.models import Contract
 from milestones.models import Milestone
-from payments.models import Wallet, Escrow, Payment
+from payments.models import Escrow, Payment
 from django.test import TestCase
 from unittest.mock import patch
 from accounts.models import User
+from rest_framework.test import APITestCase
 
 class PaymentViewsetTest(ParentTest):
   def setUp(self):
     super().setUp()
     self.contr = Contract.objects.create(client=self.client1, freelancer=self.freelancer1, title = 'contract test', total_amount=11000) 
     self.milest = Milestone.objects.create(contract=self.contr, title = 'milestone test', status = 'pending', amount=4000)  
-    self.wallet = Wallet.objects.create(user=self.client1, balance=11000)
+    self.wallet = self.client1.wallet
+    self.wallet.balance = 11000
+    self.wallet.save()
     
   def test_deposit1(self):
     self.auth_user(self.client1)
@@ -80,4 +83,49 @@ class PaymentSignalTest(TestCase):
       subject='the payment is released',
       message=f'{payment.amount}',
       recipient_email=freelancer.email)
+  
+class FullFlowTest(APITestCase):
+  def setUp(self):
+    self.client1 = User.objects.create_user(username = 'client1', email = 'client1@gmail.com', control = 'client')
+    self.freelancer1 = User.objects.create_user(username = 'freelancer1', email = 'freelancer1@gmail.com', control = 'freelancer')
+
+  def auth_user(self, user):
+    self.client.force_authenticate(user=user)
+
+  @patch('payments.signals.send_notification.delay')
+  def test_full(self, mock_send):
+    self.auth_user(self.client1)
+    contr = Contract.objects.create(client=self.client1, freelancer=self.freelancer1, title='contract test', total_amount=5000, status = 'pending')
     
+    self.auth_user(self.freelancer1)
+    res = self.client.post(f'/contracts/contract/{contr.id}/accept_contr/')
+    self.assertEqual(res.status_code, 200)
+    contr.refresh_from_db()
+    self.assertEqual(contr.status, 'active')
+
+    self.auth_user(self.client1)
+    res = self.client.post(f'/contracts/contract/{contr.id}/add_milest/', {'title': 'milest1', 'amount': 2000})
+    self.assertEqual(res.status_code, 201)
+    milest = Milestone.objects.get(contract=contr)
+    self.client1.wallet.balance = 5000
+    self.client1.wallet.save()
+    res = self.client.post( f'/payments/payment/{milest.id}/deposit/', {'amount': 2000})
+    self.assertEqual(res.status_code, 200)
+    escrow = Escrow.objects.get(milestone=milest)
+    
+    self.auth_user(self.freelancer1)
+    res = self.client.post(f'/milestones/milestone/{milest.id}/sub_milest/')
+    self.assertEqual(res.status_code, 200)
+    milest.refresh_from_db()
+    self.assertEqual(milest.status, 'submitted')
+
+    self.auth_user(self.client1)
+    res = self.client.post(f'/milestones/milestone/{milest.id}/approve_milest/')
+    self.assertEqual(res.status_code, 200)
+    self.assertTrue(Payment.objects.filter(escrow=escrow).exists())
+    
+    self.freelancer1.wallet.refresh_from_db()
+    self.assertEqual(self.freelancer1.wallet.balance, 2000)
+    contr.refresh_from_db()
+    self.assertEqual(contr.status, 'completed')
+    self.assertTrue(mock_send.called)

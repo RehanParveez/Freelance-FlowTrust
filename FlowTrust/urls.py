@@ -28,4 +28,9 @@ urlpatterns = [
     path('contracts/', include('contracts.urls')),
     path('milestones/', include('milestones.urls')),
     path('payments/', include('payments.urls')),
+    path('disputes/', include('disputes.urls')),
+    path('communication/', include('communication.urls')),
+    path('reviews/', include('reviews.urls')),
+    path('analytics/', include('analytics.urls')),
+    path('notifications/', include('notifications.urls')),
 ]

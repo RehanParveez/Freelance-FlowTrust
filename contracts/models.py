@@ -1,5 +1,7 @@
 from django.db import models
 from accounts.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 # Create your models here.
 class Contract(models.Model):
@@ -49,4 +51,18 @@ class ContractStatus(models.Model):
   
   def __str__(self):
     return self.contract.title
+  
+class Activity(models.Model):
+  user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name = 'activities')
+  action_type = models.CharField(max_length=150)
+  content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True)
+  object_id = models.PositiveIntegerField(null=True)
+  content_object = GenericForeignKey('content_type', 'object_id')
+  date = models.DateTimeField(auto_now_add=True)
+  
+  class Meta:
+    ordering = ['-date']
+
+  def __str__(self):
+    return f'{self.user} {self.action_type} {self.date}'
   
