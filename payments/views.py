@@ -1,14 +1,12 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from payments.serializers.detail import WalletSerializer, PaymentSerializer, PaymentMethodSerializer
 from payments.models import Wallet, Payment, Escrow, Transaction, Refund, PaymentMethod
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from django.db import transaction
 from milestones.models import Milestone
 from rest_framework.response import Response
 from decimal import Decimal
-from core.permissions import OwnerPermission, PaymentPermission
+from core.permissions import OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -16,7 +14,7 @@ from rest_framework import filters
 class WalletViewset(viewsets.ModelViewSet):
   serializer_class = WalletSerializer
   queryset = Wallet.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, OwnerPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -30,7 +28,7 @@ class WalletViewset(viewsets.ModelViewSet):
 class PaymentViewset(viewsets.ModelViewSet):
   serializer_class = PaymentSerializer
   queryset = Payment.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, PaymentPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -102,7 +100,7 @@ class PaymentViewset(viewsets.ModelViewSet):
 class PaymentMethodViewset(viewsets.ModelViewSet):
   serializer_class = PaymentMethodSerializer
   queryset = PaymentMethod.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, OwnerPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields

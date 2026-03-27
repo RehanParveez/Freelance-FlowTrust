@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from disputes.serializers.detail import DisputeSerializer, DisputeMessageSerializer, ProofSerializer, SolutionSerializer
 from disputes.models import Dispute, DisputeMessage, Proof, Solution
-from core.permissions import DisputePermission, DisputeMessagePermission, ProofPermission, SolutionPermission
+from core.permissions import OwnerOrAdminPermission, AdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -10,7 +10,7 @@ from rest_framework import filters
 class DisputeViewset(viewsets.ModelViewSet):
   serializer_class = DisputeSerializer
   queryset = Dispute.objects.all().order_by('id')
-  permission_classes = [DisputePermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -29,7 +29,7 @@ class DisputeViewset(viewsets.ModelViewSet):
 class DisputeMessageViewset(viewsets.ModelViewSet):
   serializer_class = DisputeMessageSerializer
   queryset = DisputeMessage.objects.all().order_by('id')
-  permission_classes = [DisputeMessagePermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -48,7 +48,7 @@ class DisputeMessageViewset(viewsets.ModelViewSet):
 class ProofViewset(viewsets.ModelViewSet):
   serializer_class = ProofSerializer
   queryset = Proof.objects.all().order_by('id')
-  permission_classes = [ProofPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -67,7 +67,7 @@ class ProofViewset(viewsets.ModelViewSet):
 class SolutionViewset(viewsets.ModelViewSet):
   serializer_class = SolutionSerializer
   queryset = Solution.objects.all().order_by('id')
-  permission_classes = [SolutionPermission]
+  permission_classes = [AdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields

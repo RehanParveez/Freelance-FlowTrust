@@ -1,8 +1,7 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from notifications.serializers import NotificationSerializer
 from notifications.models import Notification
-from core.permissions import NotificationPermission
+from core.permissions import OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -10,7 +9,7 @@ from rest_framework import filters
 class NotificationViewset(viewsets.ModelViewSet):
   serializer_class = NotificationSerializer
   queryset = Notification.objects.all().order_by('id')
-  permission_classes = [NotificationPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields

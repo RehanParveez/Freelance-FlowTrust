@@ -1,13 +1,11 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from milestones.serializers.detail import MilestoneSerializer, MilestoneSubmissionSerializer, MilestoneReviewSerializer, MilestoneStatusSerializer
 from milestones.models import Milestone, MilestoneSubmission, MilestoneReview, MilestoneStatus
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from payments.models import Payment, Escrow, Transaction
 from django.db import transaction
-from core.permissions import MilestonePermission
+from core.permissions import OwnerOrAdminPermission, FreelancerPermission, ClientPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -15,7 +13,7 @@ from rest_framework import filters
 class MilestoneViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneSerializer
   queryset = Milestone.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, MilestonePermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -92,7 +90,7 @@ class MilestoneViewset(viewsets.ModelViewSet):
 class MilestoneSubmissionViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneSubmissionSerializer
   queryset = MilestoneSubmission.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, MilestonePermission]
+  permission_classes = [FreelancerPermission, OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -111,7 +109,7 @@ class MilestoneSubmissionViewset(viewsets.ModelViewSet):
 class MilestoneReviewViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneReviewSerializer
   queryset = MilestoneReview.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, MilestonePermission]
+  permission_classes = [ClientPermission, OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -130,7 +128,7 @@ class MilestoneReviewViewset(viewsets.ModelViewSet):
 class MilestoneStatusViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneStatusSerializer
   queryset = MilestoneStatus.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, MilestonePermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -147,5 +145,3 @@ class MilestoneStatusViewset(viewsets.ModelViewSet):
     return client_mileststat | freelan_mileststat
     
     
-
-

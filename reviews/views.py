@@ -1,8 +1,7 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from reviews.serializers.detail import ReviewSerializer, RatingSerializer
 from reviews.models import Review, Rating
-from core.permissions import ReviewPermission
+from core.permissions import OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -10,7 +9,7 @@ from rest_framework import filters
 class ReviewViewset(viewsets.ModelViewSet):
   serializer_class = ReviewSerializer
   queryset = Review.objects.all().order_by('id')
-  permission_classes = [ReviewPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -29,7 +28,7 @@ class ReviewViewset(viewsets.ModelViewSet):
 class RatingViewset(viewsets.ModelViewSet):
   serializer_class = RatingSerializer
   queryset = Rating.objects.all().order_by('id')
-  permission_classes = [ReviewPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields

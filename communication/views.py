@@ -1,8 +1,7 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from communication.serializers.detail import TalkSerializer, MessageSerializer, NegotiationSerializer
 from communication.models import Talk, Message, Negotiation
-from core.permissions import TalkPermission, MessagePermission, NegotiationPermission
+from core.permissions import OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -10,7 +9,7 @@ from rest_framework import filters
 class TalkViewset(viewsets.ModelViewSet):
   serializer_class = TalkSerializer
   queryset = Talk.objects.all().order_by('id')
-  permission_classes = [TalkPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -27,7 +26,7 @@ class TalkViewset(viewsets.ModelViewSet):
 class MessageViewset(viewsets.ModelViewSet):
   serializer_class = MessageSerializer
   queryset = Message.objects.all().order_by('id')
-  permission_classes = [MessagePermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -44,7 +43,7 @@ class MessageViewset(viewsets.ModelViewSet):
 class NegotiationViewset(viewsets.ModelViewSet):
   serializer_class = NegotiationSerializer
   queryset = Negotiation.objects.all().order_by('id')
-  permission_classes = [NegotiationPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields

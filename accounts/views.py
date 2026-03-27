@@ -1,9 +1,7 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from accounts.serializers.detail import UserSerializer, ProfileSerializer, VerificationStatusSerializer
 from accounts.models import User, Profile, VerificationStatus
-from rest_framework.permissions import IsAuthenticated
-from core.permissions import OwnerPermission
+from core.permissions import AdminPermission, OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -11,7 +9,7 @@ from rest_framework import filters
 class UserViewset(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all().order_by('id')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AdminPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     # filtering fields
@@ -28,7 +26,7 @@ class UserViewset(viewsets.ModelViewSet):
 class ProfileViewset(viewsets.ModelViewSet):
   serializer_class = ProfileSerializer
   queryset = Profile.objects.all().order_by('id')
-  permission_classes = [OwnerPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     
   # filtering fields
@@ -41,7 +39,7 @@ class ProfileViewset(viewsets.ModelViewSet):
 class VerificationStatusViewset(viewsets.ModelViewSet):
   serializer_class = VerificationStatusSerializer
   queryset = VerificationStatus.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, OwnerPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     
   # filtering fields

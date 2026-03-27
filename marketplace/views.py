@@ -1,9 +1,7 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from marketplace.serializers.detail import SkillSerializer, FreelancerProfileSerializer, PortfolioSerializer, JobPostSerializer, ProposalSerializer 
 from marketplace.models import Skill, FreelancerProfile, Portfolio, JobPost, Proposal
-from rest_framework.permissions import IsAuthenticated
-from core.permissions import OwnerPermission, ClientPermission, JobPermission, ProposalPermission
+from core.permissions import OwnerOrAdminPermission, ClientPermission, FreelancerPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -11,7 +9,7 @@ from rest_framework import filters
 class SkillViewset(viewsets.ModelViewSet):
   serializer_class = SkillSerializer
   queryset = Skill.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -25,7 +23,7 @@ class SkillViewset(viewsets.ModelViewSet):
 class FreelancerProfileViewset(viewsets.ModelViewSet):
   serializer_class = FreelancerProfileSerializer
   queryset = FreelancerProfile.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -39,7 +37,7 @@ class FreelancerProfileViewset(viewsets.ModelViewSet):
 class PortfolioViewset(viewsets.ModelViewSet):
   serializer_class = PortfolioSerializer
   queryset = Portfolio.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, OwnerPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -53,7 +51,7 @@ class PortfolioViewset(viewsets.ModelViewSet):
 class JobPostViewset(viewsets.ModelViewSet):
   serializer_class = JobPostSerializer
   queryset = JobPost.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, ClientPermission, JobPermission]
+  permission_classes = [ClientPermission, OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -70,7 +68,7 @@ class JobPostViewset(viewsets.ModelViewSet):
 class ProposalViewset(viewsets.ModelViewSet):
   serializer_class = ProposalSerializer
   queryset = Proposal.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, ProposalPermission]
+  permission_classes = [FreelancerPermission, OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields

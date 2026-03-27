@@ -1,8 +1,7 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from analytics.serializers import UserAnalyticsSerializer, EarningReportSerializer, ContractAnalyticsSerializer
 from analytics.models import UserAnalytics, EarningReport, ContractAnalytics
-from core.permissions import AnalyticsPermission
+from core.permissions import AdminPermission, OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -10,7 +9,7 @@ from rest_framework import filters
 class UserAnalyticsViewset(viewsets.ModelViewSet):
   serializer_class = UserAnalyticsSerializer
   queryset = UserAnalytics.objects.all().order_by('id')
-  permission_classes = [AnalyticsPermission]
+  permission_classes = [AdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -27,7 +26,7 @@ class UserAnalyticsViewset(viewsets.ModelViewSet):
 class EarningReportViewset(viewsets.ModelViewSet):
   serializer_class = EarningReportSerializer
   queryset = EarningReport.objects.all().order_by('id')
-  permission_classes = [AnalyticsPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -44,7 +43,7 @@ class EarningReportViewset(viewsets.ModelViewSet):
 class ContractAnalyticsViewset(viewsets.ModelViewSet):
   serializer_class = ContractAnalyticsSerializer
   queryset = ContractAnalytics.objects.all().order_by('id')
-  permission_classes = [AnalyticsPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields

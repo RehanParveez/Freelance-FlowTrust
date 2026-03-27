@@ -2,11 +2,10 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from contracts.serializers.detail import ContractSerializer, ContrParticipantSerializer, ContractTermSerializer, ContractStatusSerializer, ActivitySerializer
 from contracts.models import Contract, ContrParticipant, ContractTerm, ContractStatus, Activity
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from milestones.serializers.detail import MilestoneSerializer
 from rest_framework.response import Response
-from core.permissions import ContractPermission, ActivityPermission
+from core.permissions import ClientPermission, OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
@@ -14,7 +13,7 @@ from rest_framework import filters
 class ContractViewset(viewsets.ModelViewSet):
     serializer_class = ContractSerializer
     queryset = Contract.objects.all().order_by('id')
-    permission_classes = [IsAuthenticated, ContractPermission]
+    permission_classes = [ClientPermission, OwnerOrAdminPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -74,7 +73,7 @@ class ContractViewset(viewsets.ModelViewSet):
 class ContrParticipantViewset(viewsets.ModelViewSet):
   serializer_class = ContrParticipantSerializer
   queryset = ContrParticipant.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, ContractPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -93,7 +92,7 @@ class ContrParticipantViewset(viewsets.ModelViewSet):
 class ContractTermViewset(viewsets.ModelViewSet):
   serializer_class = ContractTermSerializer
   queryset = ContractTerm.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, ContractPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -112,7 +111,7 @@ class ContractTermViewset(viewsets.ModelViewSet):
 class ContractStatusViewset(viewsets.ModelViewSet):
   serializer_class = ContractStatusSerializer
   queryset = ContractStatus.objects.all().order_by('id')
-  permission_classes = [IsAuthenticated, ContractPermission]
+  permission_classes = [OwnerOrAdminPermission]
   filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
@@ -131,7 +130,7 @@ class ContractStatusViewset(viewsets.ModelViewSet):
 class ActivityViewset(viewsets.ModelViewSet):
     serializer_class = ActivitySerializer
     queryset = Activity.objects.all().order_by('id')
-    permission_classes = [ActivityPermission]
+    permission_classes = [OwnerOrAdminPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
   # filtering fields
