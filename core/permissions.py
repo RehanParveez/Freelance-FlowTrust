@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission
+from rest_framework.permissions import SAFE_METHODS
 
 class AdminPermission(BasePermission):
   def has_permission(self, request, view):
@@ -165,4 +166,33 @@ class OwnerOrAdminPermission(BasePermission):
       if self.has_object_permission(request, view, obj.content_object):
         return True
 
+    return False
+  
+class ParticipantOrAdminPermission(BasePermission):
+  def has_permission(self, request, view):
+    return request.user.is_authenticated
+
+  def has_object_permission(self, request, view, obj):
+    user = request.user
+    if user.control == 'admin':
+      return True
+
+    if hasattr(obj, 'participants'):
+      if user in obj.participants.all():
+        return True
+
+    if hasattr(obj, 'by'): 
+      if obj.by == user:
+        return True
+      
+      if hasattr(obj, 'talk') and hasattr(obj.talk, 'participants'):
+        if user in obj.talk.participants.all() and request.method in SAFE_METHODS:
+          return True
+        
+    if hasattr(obj, 'contract'):
+      contract = obj.contract
+      if hasattr(contract, 'client') and contract.client == user:
+        return True
+      if hasattr(contract, 'freelancer') and contract.freelancer == user:
+        return True
     return False

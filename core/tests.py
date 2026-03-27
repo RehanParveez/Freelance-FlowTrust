@@ -3,7 +3,7 @@ from rest_framework.test import APIRequestFactory
 from accounts.models import User, Profile, VerificationStatus
 from marketplace.models import FreelancerProfile, JobPost, Proposal
 from contracts.models import Contract, ContrParticipant, ContractTerm, ContractStatus, Activity
-from core.permissions import AdminPermission, ClientPermission, OwnerOrAdminPermission
+from core.permissions import AdminPermission, ClientPermission, OwnerOrAdminPermission, ParticipantOrAdminPermission
 from milestones.models import Milestone, MilestoneSubmission, MilestoneReview, MilestoneStatus
 from communication.models import Talk, Message
 from disputes.models import Dispute, DisputeMessage, Proof
@@ -163,4 +163,90 @@ class OwnerOrAdminPermissionTests(TestCase):
     for name, perm in results:
       if not perm:
         print(f'the permission is failing: {name}')
-      self.assertTrue(perm) 
+      self.assertTrue(perm)
+      
+class DummyTalk:
+  def __init__(self, participants):
+    self._participants = participants
+    
+  @property
+  def participants(self):
+     class Wrapper:
+        def __init__(self, items):
+          self._items = items
+        def all(self):
+          return self._items
+     return Wrapper(self._participants)
+
+class DummyMessage:
+  def __init__(self, by, talk=None):
+    self.by = by
+    self.talk = talk
+
+class DummyContract:
+  def __init__(self, client, freelancer):
+    self.client = client
+    self.freelancer = freelancer
+
+class DummyNegotiation:
+  def __init__(self, contract):
+    self.contract = contract
+
+class ParticipantOrAdminPermissionTest(TestCase):
+  def setUp(self):
+    self.factory = APIRequestFactory()
+    self.permission = ParticipantOrAdminPermission()
+    self.admin = User.objects.create_user(username = 'admin', email = 'admin@gmail.com', password = 'admin123456', control = 'admin')
+    self.client = User.objects.create_user(username = 'client', email = 'client@gmail.com', password = 'cli123456', control = 'client')
+    self.freelancer = User.objects.create_user(username = 'freelancer', email = 'freelancer@gmail.com', password = 'free123456', control = 'freelancer')
+    self.other_user = User.objects.create_user(username = 'other', email = 'other@gmail.com', password = 'other123456', control = 'freelancer')
+
+  def test_admin_access(self):
+    talk = DummyTalk(participants=[self.client])
+    message = DummyMessage(by=self.client)
+    contract = DummyContract(client=self.client, freelancer=self.freelancer)
+    negotiation = DummyNegotiation(contract=contract)
+
+    for obj in [talk, message, negotiation]:
+      request = self.factory.get('/')
+      request.user = self.admin
+      self.assertTrue(self.permission.has_object_permission(request, None, obj))
+
+  def test_talk_permissions(self):
+    talk = DummyTalk(participants=[self.client, self.freelancer])
+    request_client = self.factory.get('/')
+    request_client.user = self.client
+    request_other = self.factory.get('/')
+    request_other.user = self.other_user
+    self.assertTrue(self.permission.has_object_permission(request_client, None, talk))
+    self.assertFalse(self.permission.has_object_permission(request_other, None, talk))
+
+  def test_message_permissions(self):
+    talk = DummyTalk(participants=[self.client, self.freelancer])
+    message = DummyMessage(by=self.client, talk=talk)
+    request_by = self.factory.post('/')
+    request_by.user = self.client
+    self.assertTrue(self.permission.has_object_permission(request_by, None, message))
+
+    request_particip = self.factory.get('/')
+    request_particip.user = self.freelancer
+    self.assertTrue(self.permission.has_object_permission(request_particip, None, message))
+
+    request_other = self.factory.get('/')
+    request_other.user = self.other_user
+    self.assertFalse(self.permission.has_object_permission(request_other, None, message))
+
+  def test_negotiation_permissions(self):
+    contract = DummyContract(client=self.client, freelancer=self.freelancer)
+    negotiation = DummyNegotiation(contract=contract)
+
+    request_client = self.factory.get('/')
+    request_client.user = self.client
+    request_freelancer = self.factory.get('/')
+    request_freelancer.user = self.freelancer
+    request_other = self.factory.get('/')
+    request_other.user = self.other_user
+
+    self.assertTrue(self.permission.has_object_permission(request_client, None, negotiation))
+    self.assertTrue(self.permission.has_object_permission(request_freelancer, None, negotiation))
+    self.assertFalse(self.permission.has_object_permission(request_other, None, negotiation))
