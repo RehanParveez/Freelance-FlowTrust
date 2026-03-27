@@ -60,39 +60,109 @@ class OwnerOrAdminPermission(BasePermission):
 
   def has_object_permission(self, request, view, obj):
     user = request.user
+
     if user.control == 'admin':
       return True
-    if hasattr(obj, 'client') and hasattr(obj, 'freelancer'):
-      if obj.client == user or obj.freelancer == user:
+
+    if hasattr(obj, 'user') and obj.user == user:
+      return True
+
+    if hasattr(obj, 'client') and obj.client == user:
+      return True
+
+    if hasattr(obj, 'freelancer'):
+      freelancer = obj.freelancer
+      if hasattr(freelancer, 'user'):
+        if freelancer.user == user:
+          return True
+      elif freelancer == user:
+          return True
+    
+    if obj.__class__.__name__ == 'ContrParticipant' and hasattr(obj, 'contract'):
+      if obj.contract.client == user:
+        return True
+      
+    if obj.__class__.__name__ == 'ContractTerm' and hasattr(obj, 'contract'):
+      if obj.contract.client == user:
+        return True
+    
+    if obj.__class__.__name__ == 'ContractStatus' and hasattr(obj, 'contract'):
+      if obj.contract.client == user:
+        return True
+      
+    if obj.__class__.__name__ == 'ContractAnalytics' and hasattr(obj, 'contract'):
+      if obj.contract.client == user:
         return True
 
-    contract_related_models = [
-        'ContrParticipant', 'ContractTerm', 'ContractStatus', 'Activity', 'Milestone', 'MilestoneSubmission', 'MilestoneReview', 'MilestoneStatus',
-            'Dispute', 'DisputeMessage', 'Proof', 'Payment', 'Escrow', 'Wallet', 'Transaction', 'Refund', 'PaymentMethod']
-    if obj.__class__.__name__ in contract_related_models:
-      if hasattr(obj, 'contract') and (obj.contract.client == user or obj.contract.freelancer == user):
+    if hasattr(obj, 'contract') and obj.__class__.__name__ in ['Milestone', 'MilestoneSubmission', 'MilestoneReview', 'MilestoneStatus', 'Escrow', 'Payment', 'Dispute', 'DisputeMessage']:
+      contract = obj.contract
+      if contract.client == user or contract.freelancer == user:
         return True
-      if hasattr(obj, 'escrow') and (obj.escrow.client == user or obj.escrow.freelancer == user):
+
+    if hasattr(obj, 'milestone'):
+      milestone = obj.milestone
+      if hasattr(milestone, 'contract'):
+        contract = milestone.contract
+        if contract.client == user or contract.freelancer == user:
           return True
-      if hasattr(obj, 'wallet') and obj.wallet.user == user:
+
+    if hasattr(obj, 'submission'):
+      submission = obj.submission
+      if hasattr(submission, 'milestone') and hasattr(submission.milestone, 'contract'):
+        contract = submission.milestone.contract
+        if contract.client == user or contract.freelancer == user:
           return True
-      if hasattr(obj, 'payment') and (obj.payment.client == user or obj.payment.freelancer == user):
+    if hasattr(obj, 'job') and hasattr(obj.job, 'client'):
+      if obj.job.client == user:
         return True
-      if hasattr(obj, 'milestone') and hasattr(obj.milestone, 'contract'):
-        if obj.milestone.contract.client == user or obj.milestone.contract.freelancer == user:
+
+    if hasattr(obj, 'freelancer') and hasattr(obj.freelancer, 'user'):
+      if obj.freelancer.user == user:
+        return True
+
+    if hasattr(obj, 'dispute'):
+      dispute = obj.dispute
+      if hasattr(dispute, 'contract'):
+        contract = dispute.contract
+        if contract.client == user or contract.freelancer == user:
           return True
-  
-    user_related_models = [
-      'Profile', 'VerificationStatus', 'Skill', 'FreelancerProfile', 'Portfolio', 'JobPost', 'Proposal', 'Review', 'Rating', 'Notification', 'UserAnalytics', 'EarningReport', 'ContractAnalytics']
-    if obj.__class__.__name__ in user_related_models:
-      if hasattr(obj, 'user') and obj.user == user:
+
+    if hasattr(obj, 'escrow'):
+      escrow = obj.escrow
+      if escrow.client == user or escrow.freelancer == user:
         return True
-      if hasattr(obj, 'freelancer') and hasattr(obj.freelancer, 'user') and obj.freelancer.user == user:
+
+    if hasattr(obj, 'payment'):
+      payment = obj.payment
+      if payment.client == user or payment.freelancer == user:
         return True
-      if hasattr(obj, 'reviewer') and obj.reviewer == user:
+
+    if hasattr(obj, 'wallet') and obj.wallet.user == user:
+      return True
+
+    if hasattr(obj, 'reviewer') and obj.reviewer == user:
+      return True
+
+    if hasattr(obj, 'reviewee') and obj.reviewee == user:
+      return True
+    
+    if hasattr(obj, 'review'):
+      review = obj.review
+      if hasattr(review, 'reviewer') and review.reviewer == user:
         return True
-      if hasattr(obj, 'reviewee') and obj.reviewee == user:
+      if hasattr(review, 'reviewee') and review.reviewee == user:
+        return True
+
+    if hasattr(obj, 'talk'):
+      talk = obj.talk
+      if hasattr(talk, 'participants') and user in talk.participants.all():
+        return True
+
+    if hasattr(obj, 'participants') and user in obj.participants.all():
+      return True
+
+    if hasattr(obj, 'content_object'):
+      if self.has_object_permission(request, view, obj.content_object):
         return True
 
     return False
-  
