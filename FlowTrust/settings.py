@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'reviews',
     'analytics',
     'notifications',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -155,6 +156,8 @@ REST_FRAMEWORK = {
 
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
 CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
