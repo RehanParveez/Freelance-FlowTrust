@@ -10,6 +10,7 @@ from core.permissions import OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from payments.payments.cache_utils import cache_wallet, get_wallet_bal
+from accounts.accounts.cache_utils import cache_dashboard
 
 # Create your views here.
 class WalletViewset(viewsets.ModelViewSet):
@@ -61,6 +62,7 @@ class PaymentViewset(viewsets.ModelViewSet):
     wallet.balance -= amount
     wallet.save()
     cache_wallet(wallet.user.id)
+    cache_dashboard(request.user.id)
     
     escrow, created = Escrow.objects.get_or_create(milestone=milest, defaults={
       'client': milest.contract.client, 'freelancer': milest.contract.freelancer, 'amount': amount, 'is_funded': True})
@@ -94,6 +96,7 @@ class PaymentViewset(viewsets.ModelViewSet):
     wallet.balance += escrow.amount
     wallet.save()
     cache_wallet(wallet.user.id)
+    cache_dashboard(request.user.id)
     
     Refund.objects.create(payment=payment, amount=escrow.amount, reason = 'refunding before the approval')
     Transaction.objects.create(wallet=wallet, amount=escrow.amount, transaction = 'refund', description = 'refunding from the escrow')

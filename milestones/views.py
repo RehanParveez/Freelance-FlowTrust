@@ -10,6 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from milestones.milestones.cache_utils import cache_milest_stats, get_milest_stats
 from contracts.contracts.cache_utils import cache_contr_stats
+from accounts.accounts.cache_utils import cache_dashboard
 
 # Create your views here.
 class MilestoneViewset(viewsets.ModelViewSet):
@@ -43,6 +44,8 @@ class MilestoneViewset(viewsets.ModelViewSet):
     milest.save()
     cache_milest_stats(milest.id)
     cache_contr_stats(milest.contract.id)
+    cache_dashboard(milest.contract.client.id)
+    cache_dashboard(milest.contract.freelancer.id)
     
     return Response({'status': 'milest is sub'}, status=200)
   
@@ -73,6 +76,7 @@ class MilestoneViewset(viewsets.ModelViewSet):
     freel_wallet = escrow.freelancer.wallet
     freel_wallet.balance += escrow.amount
     freel_wallet.save()
+    cache_dashboard(escrow.freelancer.id)
     escrow.is_released = True
     escrow.save()
     
@@ -83,6 +87,8 @@ class MilestoneViewset(viewsets.ModelViewSet):
     milest.save()
     cache_milest_stats(milest.id)
     cache_contr_stats(milest.contract.id)
+    cache_dashboard(milest.contract.client.id)
+    cache_dashboard(milest.contract.freelancer.id)
     return Response({'status': 'milest is appro & pay is relea'}, status=200)
 
   @action(detail=True, methods=['post'])
@@ -96,6 +102,8 @@ class MilestoneViewset(viewsets.ModelViewSet):
     milest.save()
     cache_milest_stats(milest.id)
     cache_contr_stats(milest.contract.id)
+    cache_dashboard(milest.contract.client.id)
+    cache_dashboard(milest.contract.freelancer.id)
     return Response({'status': 'miles is rej'}, status=200)
   
   @action(detail=True, methods=['get'])

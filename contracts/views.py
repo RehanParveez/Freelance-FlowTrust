@@ -8,6 +8,7 @@ from core.permissions import ClientPermission, OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from contracts.contracts.cache_utils import cache_contr_stats, get_contr_stats
+from accounts.accounts.cache_utils import cache_dashboard
 
 # Create your views here.
 class ContractViewset(viewsets.ModelViewSet):
@@ -32,6 +33,7 @@ class ContractViewset(viewsets.ModelViewSet):
     def perform_create(self, serializer):
       contr = serializer.save(client=self.request.user)
       cache_contr_stats(contr.id)
+      cache_dashboard(contr.client.id)
     
     @action(detail=True, methods=['post'])
     def add_milest(self, request, pk=None):
@@ -57,6 +59,8 @@ class ContractViewset(viewsets.ModelViewSet):
       contr.status = 'active'
       contr.save()
       cache_contr_stats(contr.id)
+      cache_dashboard(contr.client.id)
+      cache_dashboard(contr.freelancer.id)
       
       return Response({'status': 'contract is activated'}, status=200)
    
@@ -74,6 +78,9 @@ class ContractViewset(viewsets.ModelViewSet):
       contr.status = 'completed'
       contr.save()
       cache_contr_stats(contr.id)
+      cache_dashboard(contr.client.id)
+      cache_dashboard(contr.freelancer.id)
+      
       return Response({'status': 'the contract is completed'}, status=200)
     
     @action(detail=True, methods=['get'])

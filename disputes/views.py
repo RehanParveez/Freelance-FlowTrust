@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from payments.models import Escrow
 from decimal import Decimal
 from disputes.disputes.cache_utils import cache_dispute, get_dispute
+from accounts.accounts.cache_utils import cache_dashboard
 
 # Create your views here.
 class DisputeViewset(viewsets.ModelViewSet):
@@ -51,6 +52,8 @@ class DisputeViewset(viewsets.ModelViewSet):
     dispute.status = 'checking'
     dispute.save()
     cache_dispute(dispute.id)
+    cache_dashboard(dispute.contract.client.id)
+    cache_dashboard(dispute.contract.freelancer.id)
     return Response({'msg': 'the proof is submitted'}, status=200)
   
   @action(detail=True, methods=['post'])
@@ -99,6 +102,9 @@ class DisputeViewset(viewsets.ModelViewSet):
     dispute.status = 'solved'
     dispute.save()
     cache_dispute(dispute.id)
+    cache_dashboard(dispute.contract.client.id)
+    cache_dashboard(dispute.contract.freelancer.id)
+    
     return Response({'msg': 'the dispute is solved'}, status=200)
   
   @action(detail=True, methods=['post'])
@@ -114,6 +120,8 @@ class DisputeViewset(viewsets.ModelViewSet):
     dispute.status = 'closed'
     dispute.save()
     cache_dispute(dispute.id)
+    cache_dashboard(dispute.contract.client.id)
+    cache_dashboard(dispute.contract.freelancer.id)
     
     return Response({'msg': 'the dispute is closed'}, status=200)
   

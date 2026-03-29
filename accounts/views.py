@@ -4,6 +4,9 @@ from accounts.models import User, Profile, VerificationStatus
 from core.permissions import AdminPermission, OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from rest_framework.decorators import action
+from accounts.accounts.cache_utils import get_dashboard
+from rest_framework.response import Response
 
 # Create your views here.
 class UserViewset(viewsets.ModelViewSet):
@@ -22,6 +25,11 @@ class UserViewset(viewsets.ModelViewSet):
       if user.control == 'admin':
         return self.queryset
       return self.queryset.filter(id=user.id)
+    
+    @action(detail=False, methods=['get'])
+    def dashboard(self, request):
+      data = get_dashboard(request.user.id)
+      return Response(data)
     
 class ProfileViewset(viewsets.ModelViewSet):
   serializer_class = ProfileSerializer
