@@ -9,6 +9,7 @@ from decimal import Decimal
 from core.permissions import OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from payments.payments.cache_utils import cache_wallet, get_wallet_bal
 
 # Create your views here.
 class WalletViewset(viewsets.ModelViewSet):
@@ -59,6 +60,7 @@ class PaymentViewset(viewsets.ModelViewSet):
       return Response({'err': 'balance is less'}, status=400)
     wallet.balance -= amount
     wallet.save()
+    cache_wallet(wallet.user.id)
     
     escrow, created = Escrow.objects.get_or_create(milestone=milest, defaults={
       'client': milest.contract.client, 'freelancer': milest.contract.freelancer, 'amount': amount, 'is_funded': True})
@@ -72,8 +74,8 @@ class PaymentViewset(viewsets.ModelViewSet):
    
   @action(detail=False, methods=['get'])
   def wallet(self, request):
-     wallet = request.user.wallet
-     return Response({'balance': wallet.balance})
+     bal = get_wallet_bal(request.user.id)
+     return Response({'balance': bal})
   
   @action(detail=True, methods=['post'])
   @transaction.atomic
@@ -91,6 +93,7 @@ class PaymentViewset(viewsets.ModelViewSet):
     wallet = escrow.client.wallet
     wallet.balance += escrow.amount
     wallet.save()
+    cache_wallet(wallet.user.id)
     
     Refund.objects.create(payment=payment, amount=escrow.amount, reason = 'refunding before the approval')
     Transaction.objects.create(wallet=wallet, amount=escrow.amount, transaction = 'refund', description = 'refunding from the escrow')

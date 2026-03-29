@@ -121,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Karachi'
 
 USE_I18N = True
 
@@ -156,6 +156,7 @@ REST_FRAMEWORK = {
 
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
 CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+TIME_ZONE = 'Asia/Karachi'
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
@@ -166,3 +167,10 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'rehanrural@gmail.com'
 EMAIL_HOST_PASSWORD = 'fsxdvkynuukaojew'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+CACHES = {
+  'default': {
+    'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+    'LOCATION': 'redis://127.0.0.1:6379/1',
+    }
+}

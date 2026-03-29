@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from milestones.models import Milestone
-from core.tasks import send_notification
+from disputes.tasks import send_notification
 
 @receiver(post_save, sender=Milestone)
 def milest_submitted(sender, instance, created, **kwargs):
