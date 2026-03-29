@@ -8,6 +8,7 @@ class Milestone(models.Model):
     ('pending', 'Pending'),
     ('submitted', 'Submitted'),
     ('approved', 'Approved'),
+    ('rejected', 'Rejected')
   )
   contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='milestones')
   title = models.CharField(max_length=55)

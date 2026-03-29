@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from contracts.serializers.detail import ContractSerializer, ContrParticipantSerializer, ContractTermSerializer, ContractStatusSerializer, ActivitySerializer
 from contracts.models import Contract, ContrParticipant, ContractTerm, ContractStatus, Activity
@@ -8,6 +7,7 @@ from rest_framework.response import Response
 from core.permissions import ClientPermission, OwnerOrAdminPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from contracts.contracts.cache_utils import cache_contr_stats, get_contr_stats
 
 # Create your views here.
 class ContractViewset(viewsets.ModelViewSet):
@@ -30,7 +30,8 @@ class ContractViewset(viewsets.ModelViewSet):
       return client_contr | freelan_contr
     
     def perform_create(self, serializer):
-        serializer.save(client=self.request.user)
+      contr = serializer.save(client=self.request.user)
+      cache_contr_stats(contr.id)
     
     @action(detail=True, methods=['post'])
     def add_milest(self, request, pk=None):
@@ -40,6 +41,8 @@ class ContractViewset(viewsets.ModelViewSet):
       serializer = MilestoneSerializer(data=request.data)
       if serializer.is_valid():
         serializer.save(contract=contr)
+        cache_contr_stats(contr.id)
+        
         return Response(serializer.data, status=201)
       return Response(serializer.errors, status=400)
     
@@ -53,6 +56,8 @@ class ContractViewset(viewsets.ModelViewSet):
         return Response({'err': 'its a wrong state'}, status=400)
       contr.status = 'active'
       contr.save()
+      cache_contr_stats(contr.id)
+      
       return Response({'status': 'contract is activated'}, status=200)
    
     @action(detail=True, methods=['post'])
@@ -68,7 +73,13 @@ class ContractViewset(viewsets.ModelViewSet):
           return Response({'error': 'All milestones must be approved'}, status=400)
       contr.status = 'completed'
       contr.save()
+      cache_contr_stats(contr.id)
       return Response({'status': 'the contract is completed'}, status=200)
+    
+    @action(detail=True, methods=['get'])
+    def stats(self, request, pk=None):
+      data = get_contr_stats(pk)
+      return Response(data)
 
 class ContrParticipantViewset(viewsets.ModelViewSet):
   serializer_class = ContrParticipantSerializer

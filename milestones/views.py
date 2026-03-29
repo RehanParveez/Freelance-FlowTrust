@@ -8,6 +8,8 @@ from django.db import transaction
 from core.permissions import OwnerOrAdminPermission, FreelancerPermission, ClientPermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from milestones.milestones.cache_utils import cache_milest_stats, get_milest_stats
+from contracts.contracts.cache_utils import cache_contr_stats
 
 # Create your views here.
 class MilestoneViewset(viewsets.ModelViewSet):
@@ -37,7 +39,11 @@ class MilestoneViewset(viewsets.ModelViewSet):
     if milest.status != 'pending':
       return Response({'err': 'milest cant be sub'}, status=400)
     milest.status = 'submitted'
+    milest.is_approved = True
     milest.save()
+    cache_milest_stats(milest.id)
+    cache_contr_stats(milest.contract.id)
+    
     return Response({'status': 'milest is sub'}, status=200)
   
   @action(detail=True, methods=['post'])
@@ -73,7 +79,10 @@ class MilestoneViewset(viewsets.ModelViewSet):
     Payment.objects.create(escrow=escrow, client=escrow.client, freelancer=escrow.freelancer, amount=escrow.amount)
     Transaction.objects.create(wallet=freel_wallet, amount=escrow.amount, transaction = 'deposit', description = 'pay of milest release')
     milest.status = 'approved'
+    milest.is_approved = True
     milest.save()
+    cache_milest_stats(milest.id)
+    cache_contr_stats(milest.contract.id)
     return Response({'status': 'milest is appro & pay is relea'}, status=200)
 
   @action(detail=True, methods=['post'])
@@ -85,7 +94,14 @@ class MilestoneViewset(viewsets.ModelViewSet):
       return Response({'err': 'submitt milest can be rej'}, status=400)
     milest.status = 'rejected'
     milest.save()
+    cache_milest_stats(milest.id)
+    cache_contr_stats(milest.contract.id)
     return Response({'status': 'miles is rej'}, status=200)
+  
+  @action(detail=True, methods=['get'])
+  def stats(self, request, pk=None):
+    data = get_milest_stats(pk)
+    return Response(data)
   
 class MilestoneSubmissionViewset(viewsets.ModelViewSet):
   serializer_class = MilestoneSubmissionSerializer

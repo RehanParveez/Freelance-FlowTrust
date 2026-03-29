@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from payments.models import Escrow
 from decimal import Decimal
+from disputes.disputes.cache_utils import cache_dispute, get_dispute
 
 # Create your views here.
 class DisputeViewset(viewsets.ModelViewSet):
@@ -49,6 +50,7 @@ class DisputeViewset(viewsets.ModelViewSet):
     
     dispute.status = 'checking'
     dispute.save()
+    cache_dispute(dispute.id)
     return Response({'msg': 'the proof is submitted'}, status=200)
   
   @action(detail=True, methods=['post'])
@@ -96,6 +98,7 @@ class DisputeViewset(viewsets.ModelViewSet):
     Solution.objects.create(dispute=dispute, solved_by=user, amount_rel_to_freel=amount_to_freel, amount_ref_to_client=amount_to_client)
     dispute.status = 'solved'
     dispute.save()
+    cache_dispute(dispute.id)
     return Response({'msg': 'the dispute is solved'}, status=200)
   
   @action(detail=True, methods=['post'])
@@ -110,8 +113,14 @@ class DisputeViewset(viewsets.ModelViewSet):
       return Response({'err': 'before closing the dispute should be solved'}, status=400)
     dispute.status = 'closed'
     dispute.save()
+    cache_dispute(dispute.id)
     
     return Response({'msg': 'the dispute is closed'}, status=200)
+  
+  @action(detail=True, methods=['get'])
+  def stats(self, request, pk=None):
+    data = get_dispute(pk)
+    return Response(data)
   
 class DisputeMessageViewset(viewsets.ModelViewSet):
   serializer_class = DisputeMessageSerializer
