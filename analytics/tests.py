@@ -4,6 +4,7 @@ from contracts.models import Contract
 from analytics.models import UserAnalytics, ContractAnalytics, EarningReport
 from milestones.models import Milestone
 from payments.models import Escrow, Payment 
+from accounts.tests import ParentTest
 
 class AnalyticsSignalTest(TestCase):
   def setUp(self):
@@ -47,3 +48,60 @@ class AnalyticsSignalTest(TestCase):
     self.assertEqual(contr_anal.total_pay, 4500)
     self.assertIsNotNone(earn_report)
     self.assertEqual(earn_report.amount, 4500)
+    
+class AnalyticsAPITest(ParentTest):
+  def setUp(self):
+    super().setUp()  
+    self.auth_user(self.client1)
+    self.contract = Contract.objects.create(client=self.client1, freelancer=self.freelancer1, title = 'contract test', total_amount=45000, status = 'active')
+    self.milestone = Milestone.objects.create(contract=self.contract, title = 'milestone 1', amount=25000, order=1, status = 'approved', is_approved=True)
+    self.escrow = Escrow.objects.create(milestone=self.milestone, client=self.client1, freelancer=self.freelancer1, amount=25000, is_funded=True, is_released=True)
+    self.payment = Payment.objects.create(escrow=self.escrow, client=self.client1, freelancer=self.freelancer1, amount=25000)
+    self.user_analytics, created = UserAnalytics.objects.get_or_create(user=self.client1, defaults={'total_contr': 1, 'completed_contr': 1, 'total_earnings': 45000})
+    self.contract_analytics, created = ContractAnalytics.objects.get_or_create(contract=self.contract, defaults={'total_milest': 1, 'milest_completed': 1, 'total_pay': 10000})
+    self.earning_report = EarningReport.objects.create(user=self.freelancer1, contract=self.contract, amount=12000)
+
+  def test_user_analy1(self):
+    url = '/analytics/useranaly/'
+    res = self.client.get(url)
+
+    self.assertEqual(res.status_code, 200)
+    self.assertIn('total_contracts', res.data)
+    self.assertIn('completed_contracts', res.data)
+    self.assertIn('total_earnings', res.data)
+    self.assertIn('average_earning', res.data)
+
+  def test_contr_analy1(self):
+    url = f'/analytics/contractanaly/{self.contract.id}/'
+    resp = self.client.get(url)
+    self.assertEqual(resp.status_code, 200)
+    self.assertEqual(resp.data['total_milestones'], 1)
+
+  def test_contr_analy2(self):
+    other_user = User.objects.create_user(username = 'other', email = 'other@gmail.com', password = 'oth123456', control = 'client')
+    self.auth_user(other_user)
+    url = f'/analytics/contractanaly/{self.contract.id}/'
+    resp = self.client.get(url)
+    self.assertEqual(resp.status_code, 403)
+
+  def test_earnings(self):
+    self.auth_user(self.freelancer1)
+    url = '/analytics/earningsview/'
+    resp = self.client.get(url)
+    self.assertEqual(resp.status_code, 200)
+    self.assertTrue(isinstance(resp.data, list))
+
+  def test_dashboard(self):
+    url = '/analytics/dashboardview/'
+    resp = self.client.get(url)
+    self.assertEqual(resp.status_code, 200)
+    self.assertIn('user_data', resp.data)
+    self.assertIn('milest_completed', resp.data)
+
+  def test_user_analy2(self):
+    new_user = User.objects.create_user(username = 'newuser', email = 'new@gmail.com', password = 'new123456', control = 'client')
+    self.auth_user(new_user)
+    url = '/analytics/useranaly/'
+    resp = self.client.get(url)
+    self.assertEqual(resp.status_code, 200)
+    self.assertEqual(resp.data['total_contracts'], 0)
