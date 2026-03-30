@@ -12,7 +12,7 @@ class Milestone(models.Model):
   )
   contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='milestones')
   title = models.CharField(max_length=55)
-  amount = models.DecimalField(max_digits=12, decimal_places=2)
+  amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
   order = models.IntegerField(default=1)
   status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
   is_submitted = models.BooleanField(default=False)

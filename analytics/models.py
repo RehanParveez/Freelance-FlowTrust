@@ -6,7 +6,7 @@ class UserAnalytics(models.Model):
   user = models.OneToOneField(User, on_delete=models.CASCADE, related_name = 'analytics')
   total_contr = models.PositiveIntegerField(default=0)
   completed_contr = models.PositiveIntegerField(default=0)
-  total_earnings = models.DecimalField(max_digits=12, decimal_places=2)
+  total_earnings = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
   def __str__(self):
     return f'{self.user.username}'
@@ -24,7 +24,7 @@ class ContractAnalytics(models.Model):
   contract = models.OneToOneField(Contract, on_delete=models.CASCADE, related_name = 'analytics')
   total_milest = models.PositiveIntegerField(default=0)
   milest_completed = models.PositiveIntegerField(default=0)
-  total_pay = models.DecimalField(max_digits=12, decimal_places=2)
+  total_pay = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
   def __str__(self):
     return f'{self.contract.title}'

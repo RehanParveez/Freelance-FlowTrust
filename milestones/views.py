@@ -11,6 +11,7 @@ from rest_framework import filters
 from milestones.milestones.cache_utils import cache_milest_stats, get_milest_stats
 from contracts.contracts.cache_utils import cache_contr_stats
 from accounts.accounts.cache_utils import cache_dashboard
+# from analytics.utils import user_analytics, contract_analytics, earning_report
 
 # Create your views here.
 class MilestoneViewset(viewsets.ModelViewSet):
@@ -77,10 +78,13 @@ class MilestoneViewset(viewsets.ModelViewSet):
     freel_wallet.balance += escrow.amount
     freel_wallet.save()
     cache_dashboard(escrow.freelancer.id)
+    # user_analytics(escrow.freelancer, 'total_earnings', escrow.amount)
+    # earning_report(escrow.freelancer, milest.contract, escrow.amount)
     escrow.is_released = True
     escrow.save()
     
     Payment.objects.create(escrow=escrow, client=escrow.client, freelancer=escrow.freelancer, amount=escrow.amount)
+    # contract_analytics(milest.contract, 'total_pay', escrow.amount)
     Transaction.objects.create(wallet=freel_wallet, amount=escrow.amount, transaction = 'deposit', description = 'pay of milest release')
     milest.status = 'approved'
     milest.is_approved = True
@@ -89,6 +93,7 @@ class MilestoneViewset(viewsets.ModelViewSet):
     cache_contr_stats(milest.contract.id)
     cache_dashboard(milest.contract.client.id)
     cache_dashboard(milest.contract.freelancer.id)
+    # contract_analytics(milest.contract, 'milest_completed')
     return Response({'status': 'milest is appro & pay is relea'}, status=200)
 
   @action(detail=True, methods=['post'])

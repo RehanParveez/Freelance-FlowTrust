@@ -9,6 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from contracts.contracts.cache_utils import cache_contr_stats, get_contr_stats
 from accounts.accounts.cache_utils import cache_dashboard
+# from analytics.utils import user_analytics, contract_analytics
 
 # Create your views here.
 class ContractViewset(viewsets.ModelViewSet):
@@ -34,6 +35,8 @@ class ContractViewset(viewsets.ModelViewSet):
       contr = serializer.save(client=self.request.user)
       cache_contr_stats(contr.id)
       cache_dashboard(contr.client.id)
+      # user_analytics(contr.client, 'total_contr')
+      # user_analytics(contr.freelancer, 'total_contr')
     
     @action(detail=True, methods=['post'])
     def add_milest(self, request, pk=None):
@@ -44,6 +47,7 @@ class ContractViewset(viewsets.ModelViewSet):
       if serializer.is_valid():
         serializer.save(contract=contr)
         cache_contr_stats(contr.id)
+        # contract_analytics(contr, 'total_milest')
         
         return Response(serializer.data, status=201)
       return Response(serializer.errors, status=400)
@@ -80,6 +84,8 @@ class ContractViewset(viewsets.ModelViewSet):
       cache_contr_stats(contr.id)
       cache_dashboard(contr.client.id)
       cache_dashboard(contr.freelancer.id)
+      # user_analytics(contr.client, 'completed_contr')
+      # user_analytics(contr.freelancer, 'completed_contr')
       
       return Response({'status': 'the contract is completed'}, status=200)
     

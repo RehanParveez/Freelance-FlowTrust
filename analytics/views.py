@@ -59,6 +59,3 @@ class ContractAnalyticsViewset(viewsets.ModelViewSet):
     freel_anal = self.queryset.filter(contract__freelancer=user)
     return client_anal | freel_anal
     
-
-
-
